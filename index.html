@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User List</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <style>
+    /* Your CSS styles */
+    .container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      margin-top: 20px;
+      padding: 0 10px; /* Add padding to the sides */
+    }
+
+    .user-list {
+      display: flex;
+      flex-direction: column;
+      align-items: center; /* Center items horizontally */
+      width: 100%;
+      max-width: 800px;
+    }
+
+    .user-list-item {
+      cursor: pointer;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      padding: 10px;
+      width: 100%; /* Make each item occupy the full width */
+      max-width: 800px; /* Increase the maximum width of each item */
+      box-sizing: border-box; /* Ensure padding is included in the width */
+      transition: background-color 0.3s ease;
+    }
+
+    .user-list-item:hover {
+      background-color: #f0f0f0;
+    }
+
+    .profile-picture {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-right: 20px;
+    }
+
+    .user-details-content {
+      border: 1px solid #ccc;
+      background-color: black;
+      color: white;
+      padding: 10px;
+      margin-top: 10px;
+      width: 80%;
+    }
+
+    .user-details-content h3 {
+      margin-top: 0;
+    }
+
+    button {
+      background-color: blue;
+      color: white;
+      margin-top: 10px;
+      width: 80px;
+      border: none;
+      border-radius: 5px;
+      padding: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: darkblue;
+    }
+
+    .loader-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      height: 100vh;
+      background-color: black;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 9999;
+    }
+
+    .loader {
+      border: 16px solid #f3f3f3;
+      border-radius: 50%;
+      border-top: 16px solid #3498db;
+      width: 120px;
+      height: 120px;
+      -webkit-animation: spin 2s linear infinite; /* Safari */
+      animation: spin 2s linear infinite;
+    }
+
+    /* Safari */
+    @-webkit-keyframes spin {
+      0% { -webkit-transform: rotate(0deg); }
+      100% { -webkit-transform: rotate(360deg); }
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Media queries for responsive design */
+    @media screen and (min-width: 768px) {
+      .user-list-item {
+        width: calc(50% - 20px); /* Two items per row with some spacing */
+        margin-right: 20px; /* Add spacing between items */
+      }
+    }
+
+    @media screen and (min-width: 1024px) {
+      .user-list-item {
+        width: calc(33.33% - 20px); /* Three items per row with some spacing */
+        margin-right: 20px; /* Add spacing between items */
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="loader-container" id="loaderContainer">
+    <div class="loader"></div>
+  </div>
+  <div class="container" id="contentContainer" style="display: none;">
+    <div class="user-list" id="userList">
+      <h2>User</h2>
+    </div>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const userListElement = document.getElementById('userList');
+        const loaderContainer = document.getElementById('loaderContainer');
+        const contentContainer = document.getElementById('contentContainer');
+
+        fetch('https://602e7c2c4410730017c50b9d.mockapi.io/users')
+          .then(response => response.json())
+          .then(users => {
+            loaderContainer.style.display = 'none';
+            contentContainer.style.display = 'block';
+
+            // Display user list excluding the first 10 items
+            users.slice(10).forEach(user => {
+              const userListItem = document.createElement('div');
+              userListItem.classList.add('user-list-item');
+              userListItem.innerHTML = `
+                <div style="display: flex; align-items: center;">
+                  <img src="${user.avatar}" alt="Profile Picture" class="profile-picture" style="margin-right: 10px;">
+                  <div style="display: flex; flex-direction: column;">
+                    <div class="user-info">
+                      <h3>${user.profile.firstName} ${user.profile.lastName}</h3>
+                      <p>${user.jobTitle}</p>
+                    </div>
+                    <button onclick="toggleDetails('${user.id}')">Click Me</button>
+                  </div>
+                </div>
+                <div id="details${user.id}" class="user-details-content" style="display: none;">
+                  <div class="banner">
+                    <div class="profile-picture-container" style="background-image: linear-gradient(to bottom, red, #E6E6FA); display: flex; justify-content: center; align-items: center;">
+                      <img class="img-fluid" src="${user.avatar}" style="max-width: 150px; height: 150px;">
+                    </div>
+                    <div class="menu">
+                      <div class="opener">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                      </div>
+                    </div>
+                    <h3>${user.profile.firstName} ${user.profile.lastName}</h3>
+                    <p><strong>Job Title:</strong> ${user.jobTitle}</p>
+                    <p><strong>Email:</strong> ${user.profile.email}</p>
+                    <p><strong>Bio:</strong> ${user.Bio}</p>
+                    <div class="actions">
+                      <div class="follow-btn">
+                        <button onclick="closeDetails('${user.id}')">Close</button> <!-- Close button -->
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              `;
+              userListElement.appendChild(userListItem);
+            });
+          })
+          .catch(error => {
+            console.error('Error fetching data:', error);
+            // Display error message or handle error accordingly
+            loaderContainer.style.display = 'none';
+            contentContainer.innerHTML = '<p style="color: red;">Failed to fetch data. Please try again later.</p>';
+            contentContainer.style.display = 'block';
+          });
+      });
+
+      function toggleDetails(userId) {
+        const userDetails = document.getElementById(`details${userId}`);
+        userDetails.style.display = userDetails.style.display === 'none' ? 'block' : 'none';
+      }
+
+      function closeDetails(userId) {
+        const userDetails = document.getElementById(`details${userId}`);
+        userDetails.style.display = 'none';
+      }
+  </script>
+</body>
+</html>
